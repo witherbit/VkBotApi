@@ -27,9 +27,9 @@ namespace VkBotApi.Core
 
         public string _server { get; set; }
 
-        public Api(string token, long groupId)
+        public Api(string accessToken, long groupId)
         {
-            _token = token;
+            _token = accessToken;
             _groupId = groupId;
             GetInfoLongPoll();
         }
