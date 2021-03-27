@@ -14,6 +14,8 @@ namespace VkBotApi.Core
     {
         public delegate void ApiEventHandler(UpdateEventArgs e);
         public event ApiEventHandler OnUpdate;
+
+        public string Version { get; set; } = "5.100";
         private string _token { get; set; }
         private long _groupId { get; set; }
 
@@ -63,7 +65,7 @@ namespace VkBotApi.Core
             }
             nameValueCollection.Add("access_token", _token);
             nameValueCollection.Add("group_id", _groupId.ToString());
-            nameValueCollection.Add("v", "5.100");
+            nameValueCollection.Add("v", Version);
             JToken jtoken;
             try
             {
