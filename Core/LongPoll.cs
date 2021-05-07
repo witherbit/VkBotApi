@@ -13,21 +13,14 @@ namespace VkBotApi.Core
 {
     public sealed class LongPoll : IDisposable
     {
-        private Api _api;
+        internal Api _api;
 
         public event EventHandler<UpdateEventArgs> OnUpdate;
         public event EventHandler<CancellationToken> OnStart;
         public event EventHandler<CancellationToken> OnStop;
         public event EventHandler<CancellationToken> OnDispose;
 
-        public long GroupId { get; private set; }
-
-        internal LongPoll(Api api, long groupId)
-        {
-            _api = api;
-            GroupId = groupId;
-            GetInfoLongPoll();
-        }
+        public long GroupId { get; internal set; }
 
         private CancellationTokenSource _cts;
         public CancellationToken CancellToken { get; private set; }
@@ -38,7 +31,7 @@ namespace VkBotApi.Core
 
         public string Server { get; private set; }
 
-        private void GetInfoLongPoll()
+        internal void GetInfoLongPoll()
         {
             JToken jtoken = _api.CallMethod("groups.getLongPollServer", new Dictionary<string, object>(1)
             {

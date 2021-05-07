@@ -15,7 +15,7 @@ namespace VkBotApi.Core
     public sealed class Api : IDisposable
     {
         public static event EventHandler<ApiException> OnException;
-        public int ApiVersion { get; set; } = 100;
+        public string ApiVersion { get; set; } = "5.100";
 
         public string Token { get; private set; }
         
@@ -30,7 +30,10 @@ namespace VkBotApi.Core
         public Api(string accessToken, long groupId)
         {
             Token = accessToken;
-            LongPoll = new LongPoll(this, groupId);
+            LongPoll = new LongPoll();
+            LongPoll._api = this;
+            LongPoll.GroupId = groupId;
+            LongPoll.GetInfoLongPoll();
             Init();
         }
         #region Methods
@@ -57,7 +60,6 @@ namespace VkBotApi.Core
             string @string;
             using (WebClient webClient = new WebClient())
             {
-                Console.WriteLine(address);
                 @string = Encoding.UTF8.GetString(webClient.UploadValues(address, parametrs));
             }
             return @string;
@@ -65,7 +67,6 @@ namespace VkBotApi.Core
 
         public JToken CallMethod(string methodName, Dictionary<string, object> parameters)
         {
-            if (ApiVersion < 80 || ApiVersion > 110) SendException(this, new ApiException($"The api version cannot be lower than version 5.80 or higher than 5.110. The {methodName} method cannot be executed", ExceptionCode.Other));
             string address = string.Format("https://api.vk.com/method/{0}?", methodName);
             NameValueCollection nameValueCollection = new NameValueCollection();
             foreach (KeyValuePair<string, object> keyValuePair in parameters)
@@ -74,7 +75,7 @@ namespace VkBotApi.Core
             }
             nameValueCollection.Add("access_token", Token);
             if(LongPoll != null) nameValueCollection.Add("group_id", LongPoll.GroupId.ToString());
-            nameValueCollection.Add("v", "5." + ApiVersion);
+            nameValueCollection.Add("v", ApiVersion);
             JToken jtoken = null;
             try
             {
