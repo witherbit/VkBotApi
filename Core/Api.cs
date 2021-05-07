@@ -57,6 +57,7 @@ namespace VkBotApi.Core
             string @string;
             using (WebClient webClient = new WebClient())
             {
+                Console.WriteLine(address);
                 @string = Encoding.UTF8.GetString(webClient.UploadValues(address, parametrs));
             }
             return @string;

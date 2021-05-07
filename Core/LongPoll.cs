@@ -26,6 +26,7 @@ namespace VkBotApi.Core
         {
             _api = api;
             GroupId = groupId;
+            GetInfoLongPoll();
         }
 
         private CancellationTokenSource _cts;
