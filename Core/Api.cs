@@ -15,7 +15,7 @@ namespace VkBotApi.Core
     public sealed class Api : IDisposable
     {
         public static event EventHandler<ApiException> OnException;
-        public string ApiVersion { get; set; } = "5.100";
+        public int ApiVersion { get; set; } = 100;
 
         public string Token { get; private set; }
         
@@ -67,6 +67,11 @@ namespace VkBotApi.Core
 
         public JToken CallMethod(string methodName, Dictionary<string, object> parameters)
         {
+            if(ApiVersion < 80 || ApiVersion > 100)
+            {
+                SendException(this, new ApiException("The API version cannot be less than 5.80 or higher than 5.110", ExceptionCode.Other));
+                return null;
+            }
             string address = string.Format("https://api.vk.com/method/{0}?", methodName);
             NameValueCollection nameValueCollection = new NameValueCollection();
             foreach (KeyValuePair<string, object> keyValuePair in parameters)
@@ -75,7 +80,7 @@ namespace VkBotApi.Core
             }
             nameValueCollection.Add("access_token", Token);
             if(LongPoll != null) nameValueCollection.Add("group_id", LongPoll.GroupId.ToString());
-            nameValueCollection.Add("v", ApiVersion);
+            nameValueCollection.Add("v", "5." + ApiVersion);
             JToken jtoken = null;
             try
             {
