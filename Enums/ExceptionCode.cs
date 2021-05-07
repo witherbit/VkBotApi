@@ -7,6 +7,7 @@ namespace VkBotApi.Enums
     public enum ExceptionCode
     {
         Other,
-        AccessToken
+        AccessToken,
+        System
     }
 }

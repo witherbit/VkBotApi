@@ -7,33 +7,40 @@ using System.Text;
 using VkBotApi.Models;
 using VkBotApi.Enums;
 using System.Threading.Tasks;
+using System.Threading;
+using VkBotApi.Methods;
 
 namespace VkBotApi.Core
 {
-    public sealed class Api
+    public sealed class Api : IDisposable
     {
-        public delegate void ApiEventHandler(UpdateEventArgs e);
-        public event ApiEventHandler OnUpdate;
+        public static event EventHandler<ApiException> OnException;
+        public int ApiVersion { get; set; } = 100;
 
-        public string Version { get; set; } = "5.100";
-        private string _token { get; set; }
-        private long _groupId { get; set; }
+        public string Token { get; private set; }
+        
+        public LongPoll LongPoll { get; private set; }
 
-        private bool _isRunning { get; set; }
-
-        public string _ts { get; set; }
-
-        public string _key { get; set; }
-
-        public string _server { get; set; }
+        public Api(string accessToken)
+        {
+            Token = accessToken;
+            Init();
+        }
 
         public Api(string accessToken, long groupId)
         {
-            _token = accessToken;
-            _groupId = groupId;
-            GetInfoLongPoll();
+            Token = accessToken;
+            LongPoll = new LongPoll(this, groupId);
+            Init();
         }
-
+        #region Methods
+        private void Init()
+        {
+            Messages = new Messages();
+            Messages._api = this;
+        }
+        public Messages Messages { get; private set; }
+        #endregion
         internal string Request(string address)
         {
             string result;
@@ -57,23 +64,24 @@ namespace VkBotApi.Core
 
         public JToken CallMethod(string methodName, Dictionary<string, object> parameters)
         {
+            if (ApiVersion < 80 || ApiVersion > 110) SendException(this, new ApiException($"The api version cannot be lower than version 5.80 or higher than 5.110. The {methodName} method cannot be executed", ExceptionCode.Other));
             string address = string.Format("https://api.vk.com/method/{0}?", methodName);
             NameValueCollection nameValueCollection = new NameValueCollection();
             foreach (KeyValuePair<string, object> keyValuePair in parameters)
             {
                 nameValueCollection.Add(keyValuePair.Key, keyValuePair.Value.ToString());
             }
-            nameValueCollection.Add("access_token", _token);
-            nameValueCollection.Add("group_id", _groupId.ToString());
-            nameValueCollection.Add("v", Version);
-            JToken jtoken;
+            nameValueCollection.Add("access_token", Token);
+            if(LongPoll != null) nameValueCollection.Add("group_id", LongPoll.GroupId.ToString());
+            nameValueCollection.Add("v", "5." + ApiVersion);
+            JToken jtoken = null;
             try
             {
                 jtoken = JToken.Parse(this.Request(address, nameValueCollection).ToString());
             }
             catch
             {
-                throw new RequestException();
+                SendException(this, new ApiException("Cannot send request", ExceptionCode.System));
             }
             if (jtoken["error"] == null)
             {
@@ -81,97 +89,32 @@ namespace VkBotApi.Core
             }
             if (Convert.ToInt32(jtoken["error"]["error_code"]) == 5)
             {
-                Console.WriteLine(jtoken);
-                throw new ApiException(jtoken["error"]["error_code"].ToString(), ExceptionCode.AccessToken);
+                SendException(this, new ApiException(jtoken["error"]["error_code"].ToString(), ExceptionCode.AccessToken));
             }
-            throw new ApiException(jtoken["error"]["error_code"].ToString(), ExceptionCode.Other);
+            SendException(this, new ApiException(jtoken["error"]["error_code"].ToString(), ExceptionCode.Other));
+            return jtoken;
         }
 
-        private void GetInfoLongPoll()
+        internal static void SendException(object sender, ApiException exception)
         {
-            JToken jtoken = CallMethod("groups.getLongPollServer", new Dictionary<string, object>(1)
-            {
-                {
-                    "lp_version",
-                    "3"
-                }
-            });
-            _ts = jtoken["ts"].ToString();
-            _key = jtoken["key"].ToString();
-            _server = jtoken["server"].ToString();
+            Task.Factory.StartNew(()=>OnException?.Invoke(sender, exception));
         }
 
-        private JToken RequestLongPoll()
+        public void Dispose()
         {
-            NameValueCollection parametrs = new NameValueCollection
-            {
-                {
-                    "act",
-                    "a_check"
-                },
-                {
-                    "key",
-                    _key
-                },
-                {
-                    "ts",
-                    _ts
-                },
-                {
-                    "wait",
-                    "25"
-                },
-                {
-                    "mode",
-                    "2"
-                },
-                {
-                    "version",
-                    "3"
-                }
-            };
-            return JToken.Parse(Request(string.Format("{0}", _server), parametrs));
+            if(LongPoll != null)
+                LongPoll.Dispose();
+            GC.Collect();
         }
 
-        public void Listen()
+        public override string ToString()
         {
-            _isRunning = true;
-            while (_isRunning)
-            {
-                JToken jtoken = RequestLongPoll();
-                if (Convert.ToInt32(jtoken["failed"]) == 1)
-                {
-                    _ts = jtoken["ts"].ToString();
-                }
-                else if (Convert.ToInt32(jtoken["failed"]) == 2 || Convert.ToInt32(jtoken["failed"]) == 3)
-                {
-                    GetInfoLongPoll();
-                }
-                else
-                {
-                    _ts = jtoken["ts"].ToString();
-                    foreach (JToken response in ((IEnumerable<JToken>)jtoken["updates"]))
-                    {
-                        UpdateEventArgs update = new UpdateEventArgs(response);
-                        OnUpdate?.Invoke(update);
-                    }
-                }
-            }
-        }
-
-        public void ListenAsync()
-        {
-            Task.Factory.StartNew(Listen);
-        }
-
-        public void StopListen()
-        {
-            _isRunning = false;
+            return Token;
         }
 
         ~Api()
         {
-            StopListen();
+            Dispose();
         }
     }
 }
