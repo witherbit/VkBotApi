@@ -25,6 +25,11 @@ namespace VkBotApi.Methods
                 _api.CallMethod("messages.addChatUser", par);
             });
         }
+        /// <summary>
+        /// Create chat method.
+        /// </summary>
+        /// <param name="userIds">User ids to add to the chat</param>
+        /// <param name="title">Chat title</param>
         public async void CreateChat(List<ulong>userIds, string title)
         {
             await Task.Run(() =>
@@ -44,6 +49,11 @@ namespace VkBotApi.Methods
                 });
             });
         }
+        /// <summary>
+        /// Send message method.
+        /// </summary>
+        /// <param name="message">Message parameters.</param>
+        /// <returns>Result of method call.</returns>
         public JToken SendMessage(MessageParams message)
         {
             var parameters = new Dictionary<string, object>
@@ -64,13 +74,6 @@ namespace VkBotApi.Methods
                 parameters.Add("keyboard", message.Keyboard.Build());
 
             return _api.CallMethod("messages.send", parameters);
-        }
-        public async Task<JToken> SendMessageAsync(MessageParams message)
-        {
-            return await Task.Run(()=>
-            {
-                return SendMessage(message);
-            });
         }
     }
 }

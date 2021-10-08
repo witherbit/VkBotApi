@@ -14,21 +14,47 @@ namespace VkBotApi.Core
     public sealed class LongPoll : IDisposable
     {
         internal Api _api;
-
+        /// <summary>
+        /// LongPoll update event.
+        /// </summary>
         public event EventHandler<UpdateEventArgs> OnUpdate;
+        /// <summary>
+        /// Start LongPoll listening event.
+        /// </summary>
         public event EventHandler<CancellationToken> OnStart;
+        /// <summary>
+        /// Stop LongPoll listening event.
+        /// </summary>
         public event EventHandler<CancellationToken> OnStop;
+        /// <summary>
+        /// Dispose LongPoll instance event.
+        /// </summary>
         public event EventHandler<CancellationToken> OnDispose;
-
+        /// <summary>
+        /// Community id.
+        /// </summary>
         public long GroupId { get; internal set; }
+        /// <summary>
+        /// Access token.
+        /// </summary>
+        public string Token { get => _api.Token; }
 
         private CancellationTokenSource _cts;
+        /// <summary>
+        /// LongPoll listening cancellation token.
+        /// </summary>
         public CancellationToken CancellToken { get; private set; }
-
+        /// <summary>
+        /// The number of the last event to receive data from.
+        /// </summary>
         public string Ts { get; private set; }
-
+        /// <summary>
+        /// Secret session key.
+        /// </summary>
         public string Key { get; private set; }
-
+        /// <summary>
+        /// LongPoll server address.
+        /// </summary>
         public string Server { get; private set; }
 
         internal void GetInfoLongPoll()
@@ -76,7 +102,9 @@ namespace VkBotApi.Core
             };
             return JToken.Parse(_api.Request(string.Format("{0}", Server), parametrs));
         }
-
+        /// <summary>
+        /// Start LongPoll listening.
+        /// </summary>
         public void Listen()
         {
             if (_cts == null)
@@ -108,7 +136,9 @@ namespace VkBotApi.Core
             }
             else Api.SendException(this, new ApiException("The task cannot be started because it is already running", ExceptionCode.System));
         }
-
+        /// <summary>
+        /// Start LongPoll listening async.
+        /// </summary>
         public async void ListenAsync()
         {
             await Task.Run(()=>
@@ -116,7 +146,9 @@ namespace VkBotApi.Core
                 Listen();
             });
         }
-
+        /// <summary>
+        /// Stop LongPoll listening.
+        /// </summary>
         public void StopListen()
         {
             if(_cts != null)
@@ -128,17 +160,11 @@ namespace VkBotApi.Core
             }
             else Api.SendException(this, new ApiException("The task can't be stopped because it hasn't started yet", ExceptionCode.System));
         }
-
         public void Dispose()
         {
             StopListen();
             Task.Factory.StartNew(() => OnDispose?.Invoke(this, CancellToken));
-            GC.Collect();
-        }
-
-        public override string ToString()
-        {
-            return _api.Token + " " + GroupId;
+            GC.SuppressFinalize(this);
         }
 
         ~LongPoll()

@@ -14,19 +14,36 @@ namespace VkBotApi.Core
 {
     public sealed class Api : IDisposable
     {
+        /// <summary>
+        /// VK API exception event. 
+        /// </summary>
         public static event EventHandler<ApiException> OnException;
+        /// <summary>
+        /// VK API version (5.[value]).
+        /// </summary>
         public int ApiVersion { get; set; } = 100;
-
+        /// <summary>
+        /// Access token.
+        /// </summary>
         public string Token { get; private set; }
-        
+        /// <summary>
+        /// LongPoll instance (Only for community initializer).
+        /// </summary>
         public LongPoll LongPoll { get; private set; }
-
+        /// <summary>
+        /// Api initializer for user.
+        /// </summary>
+        /// <param name="accessToken">User access token.</param>
         public Api(string accessToken)
         {
             Token = accessToken;
             Init();
         }
-
+        /// <summary>
+        /// Api initializer for community.
+        /// </summary>
+        /// <param name="accessToken">Community access token.</param>
+        /// <param name="groupId">Community id.</param>
         public Api(string accessToken, long groupId)
         {
             Token = accessToken;
@@ -64,15 +81,20 @@ namespace VkBotApi.Core
             }
             return @string;
         }
-
-        public JToken CallMethod(string methodName, Dictionary<string, object> parameters)
+        /// <summary>
+        /// Call VK API method.
+        /// </summary>
+        /// <param name="name">Method name.</param>
+        /// <param name="parameters">Method parameters.</param>
+        /// <returns></returns>
+        public JToken CallMethod(string name, Dictionary<string, object> parameters)
         {
             if(ApiVersion < 80 || ApiVersion > 100)
             {
                 SendException(this, new ApiException("The API version cannot be less than 5.80 or higher than 5.110", ExceptionCode.Other));
                 return null;
             }
-            string address = string.Format("https://api.vk.com/method/{0}?", methodName);
+            string address = string.Format("https://api.vk.com/method/{0}?", name);
             NameValueCollection nameValueCollection = new NameValueCollection();
             foreach (KeyValuePair<string, object> keyValuePair in parameters)
             {
@@ -111,12 +133,7 @@ namespace VkBotApi.Core
         {
             if(LongPoll != null)
                 LongPoll.Dispose();
-            GC.Collect();
-        }
-
-        public override string ToString()
-        {
-            return Token;
+            GC.SuppressFinalize(this);
         }
 
         ~Api()
