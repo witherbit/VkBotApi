@@ -6,12 +6,12 @@ using VkBotApi.Enums;
 using Newtonsoft.Json;
 using System.Linq;
 
-namespace VkBotApi.Models.Messages
+namespace VkBotApi.Models.Params
 {
     /// <summary>
     /// Keyboard instance for bots. 5 × 10 for default keyboard size (Max keys - 40), 5 x 6 with Inline = true (Max keys - 10)
     /// </summary>
-    public class Keyboard
+    public class KeyboardParams
     {
         /// <summary>
         /// Whether to hide the keyboard after the first use. The parameter is triggered only for buttons that send messages (field "type" - text, location) For "type" equal to open_app, vk_pay parameter is ignored.

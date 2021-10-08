@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using VkBotApi.Utils;
 
-namespace VkBotApi.Models.Messages
+namespace VkBotApi.Models.Params
 {
-    public class Message
+    public class MessageParams
     {
         public long PeerId { get; set; }
 
@@ -25,6 +25,6 @@ namespace VkBotApi.Models.Messages
 
         public int? StickerId { get; set; }
 
-        public Keyboard Keyboard { get; set; }
+        public KeyboardParams Keyboard { get; set; }
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VkBotApi.Core;
 using VkBotApi.Models;
-using VkBotApi.Models.Messages;
+using VkBotApi.Models.Params;
 
 namespace VkBotApi.Methods
 {
@@ -44,7 +44,7 @@ namespace VkBotApi.Methods
                 });
             });
         }
-        public JToken SendMessage(Message message)
+        public JToken SendMessage(MessageParams message)
         {
             var parameters = new Dictionary<string, object>
             {
@@ -65,7 +65,7 @@ namespace VkBotApi.Methods
 
             return _api.CallMethod("messages.send", parameters);
         }
-        public async Task<JToken> SendMessageAsync(Message message)
+        public async Task<JToken> SendMessageAsync(MessageParams message)
         {
             return await Task.Run(()=>
             {
