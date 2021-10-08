@@ -7,19 +7,7 @@ namespace VkBotApi.Models.Messages
 {
     public class Message
     {
-        public List<long> PeerIds = new List<long>();
-
-        public void AddPeerId(long peerId)
-        {
-            try
-            {
-                PeerIds.Add(peerId);
-            }
-            catch
-            {
-
-            }
-        }
+        public long PeerId { get; set; }
 
         public string Text { get; set; }
         public int RandomId { get { return DateTime.Now.GetTimeStampInt(); } }
@@ -36,5 +24,7 @@ namespace VkBotApi.Models.Messages
         public long? ReplyTo { get; set; }
 
         public int? StickerId { get; set; }
+
+        public Keyboard Keyboard { get; set; }
     }
 }

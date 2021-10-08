@@ -46,16 +46,9 @@ namespace VkBotApi.Methods
         }
         public JToken SendMessage(Message message)
         {
-            string peer_ids = "";
-            foreach (var peerId in message.PeerIds)
-            {
-                if (peerId == message.PeerIds[message.PeerIds.Count - 1])
-                    peer_ids += peerId.ToString();
-                else peer_ids += peerId.ToString() + ", ";
-            }
             var parameters = new Dictionary<string, object>
             {
-                { "peer_ids", peer_ids },
+                { "peer_id", message.PeerId },
                 { "message", message.Text },
                 { "random_id", message.RandomId }
             };
@@ -67,6 +60,8 @@ namespace VkBotApi.Methods
                 parameters.Add("reply_to", message.ReplyTo);
             if (message.StickerId != null)
                 parameters.Add("sticker_id", message.StickerId);
+            if (message.Keyboard != null)
+                parameters.Add("keyboard", message.Keyboard.Build());
 
             return _api.CallMethod("messages.send", parameters);
         }
