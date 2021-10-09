@@ -59,9 +59,10 @@ namespace VkBotApi.Methods
             var parameters = new Dictionary<string, object>
             {
                 { "peer_id", message.PeerId },
-                { "message", message.Text },
                 { "random_id", message.RandomId }
             };
+            if (!string.IsNullOrEmpty(message.Text))
+                parameters.Add("message", message.Text);
             if (message.Lat != null)
                 parameters.Add("lat", message.Lat);
             if (message.Long != null)

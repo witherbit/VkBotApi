@@ -7,6 +7,12 @@ namespace VkBotApi.Enums
     public enum EventType
     {
         NewMessage,
-        Other
+        MessageReply,
+        MessageEdit,
+        MessageAllow,
+        MessageDeny,
+        MessageTypingState,
+        MessageEvent,
+        Raw
     }
 }

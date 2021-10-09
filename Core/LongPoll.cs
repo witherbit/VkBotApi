@@ -13,11 +13,16 @@ namespace VkBotApi.Core
 {
     public sealed class LongPoll : IDisposable
     {
+        
         internal Api _api;
+        /// <summary>
+        /// LongPoll update events.
+        /// </summary>
+        public MessageEvents MessageEvents { get; private set; } = new MessageEvents();
         /// <summary>
         /// LongPoll update event.
         /// </summary>
-        public event EventHandler<UpdateEventArgs> OnUpdate;
+        public event EventHandler<UpdateRaw> OnUpdate;
         /// <summary>
         /// Start LongPoll listening event.
         /// </summary>
@@ -128,8 +133,7 @@ namespace VkBotApi.Core
                         Ts = jtoken["ts"].ToString();
                         foreach (JToken response in ((IEnumerable<JToken>)jtoken["updates"]))
                         {
-                            UpdateEventArgs update = new UpdateEventArgs(response);
-                            Task.Factory.StartNew(() => OnUpdate?.Invoke(this, update));
+                            UpdateHandler(response);
                         }
                     }
                 }
@@ -167,6 +171,24 @@ namespace VkBotApi.Core
             GC.SuppressFinalize(this);
         }
 
+        private void UpdateHandler(JToken update)
+        {
+            OnUpdate?.Invoke(this, new UpdateRaw(update));
+            if (update["type"].ToObject<string>() == "message_new")
+                MessageEvents.CallEvent(new Message(update), this);
+            else if (update["type"].ToObject<string>() == "message_reply")
+                MessageEvents.CallEvent(new MessageReply(update), this);
+            else if (update["type"].ToObject<string>() == "message_edit")
+                MessageEvents.CallEvent(new MessageEdit(update), this);
+            else if (update["type"].ToObject<string>() == "message_allow")
+                MessageEvents.CallEvent(new MessageAllow(update), this);
+            else if (update["type"].ToObject<string>() == "message_deny")
+                MessageEvents.CallEvent(new MessageDeny(update), this);
+            else if (update["type"].ToObject<string>() == "message_typing_state")
+                MessageEvents.CallEvent(new MessageTypingState(update), this);
+            else if (update["type"].ToObject<string>() == "message_event")
+                MessageEvents.CallEvent(new MessageEvent(update), this);
+        }
         ~LongPoll()
         {
             Dispose();
