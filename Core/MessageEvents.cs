@@ -8,6 +8,7 @@ namespace VkBotApi.Core
 {
     public class MessageEvents
     {
+        public int sex = 0;
         public event EventHandler<Message> OnMessage;
         public event EventHandler<MessageAllow> OnMessageAllow;
         public event EventHandler<MessageDeny> OnMessageDeny;
